@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Registered;
 
 
 class UserController extends Controller
@@ -66,7 +67,9 @@ class UserController extends Controller
         if($user->save()){
             //si guarda el usuario asigna el respectivo rol
             $user->assignRole($role);
-
+            //se manda el correo de validacion de cuenta
+            $user->sendEmailVerificationNotification();
+            
             $response = ['isValid'=>true, 'message' => 'User was created!'];
         }else{
             $response = ['isValid'=>false, 'message' => 'Something went wrong!'];
