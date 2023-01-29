@@ -13,19 +13,24 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+/*
 Route::get('/', function () {
-    return view('welcome');
+    return view('dashboard');
 });
-
-Route::get('/dashboard', function () {
+*/
+Route::get('/', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::view('/users', 'user_index')->middleware('can:users');
+    Route::view('/stock', 'stock_index')->middleware('can:stock');
+    Route::view('/accounting', 'accounting_index')->middleware('can:accounting');
+    Route::view('/online_store', 'store_index')->middleware('can:online_store');
+
+    Route::controller(UserController::class)->group(function () {
+        Route::post('users/getUsers', 'getUsers');    
+    });
 });
 
 require __DIR__.'/auth.php';
