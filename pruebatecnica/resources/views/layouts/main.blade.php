@@ -25,6 +25,8 @@
   <link href="{{ asset('/vendor/quill/quill.bubble.css') }}" rel="stylesheet">
 
   <link href="{{ asset('/css/plantilla.css') }}" rel="stylesheet">
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <style>
   .dx-toolbar{
@@ -51,6 +53,7 @@
 </style>
 <body class="toggle-sidebar">
   <!-- ======= Header ======= -->
+  
   <header id="header" class="header fixed-top d-flex align-items-center">
 
     <div class="d-flex align-items-center justify-content-between">
@@ -133,7 +136,7 @@
 
       @can('online_store')
       <li class="nav-item">
-        <a class="nav-link collapsed" href="{{ url('/store') }}">
+        <a class="nav-link collapsed" href="{{ url('/online_store') }}">
           <i class="bi bi-cart-fill"></i>
           <span>Online Store</span>
         </a>

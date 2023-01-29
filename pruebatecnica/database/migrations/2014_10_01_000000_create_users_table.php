@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('dui')->unique();
             $table->string('verification_code');
-            $table->dateTime('last_login', $precision = 0);
+            $table->dateTime('last_login', $precision = 0)->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

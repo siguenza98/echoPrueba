@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="col-xs-12 col-md-12 col-xl-12" id="toolbar"></div>
-    <div id="tablaClientes"></div>
+    <div id="userTable"></div>
     <div id="loadpanel"></div>
 
     <div id="popupContainer"></div>
@@ -14,25 +14,47 @@
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
-            let anchoPopup = "";
+            let popupWidth = "";
+            //determina el ancho de los popup a partir del ancho disponible de la pantalla
             if (screen.availWidth < 500) {
-                anchoPopup = "80%";
+                popupWidth = "80%";
             } else if (screen.availWidth >= 500 && screen.availWidth < 1000) {
-                anchoPopup = "60%";
+                popupWidth = "60%";
             } else {
-                anchoPopup = "40%";
+                popupWidth = "30%";
             }
+
+            //array con roles
+            const roles = [
+                {
+                    "id": "admin",
+                    "value": "Administrator"
+                },
+                {
+                    "id": "inventory_manager",
+                    "value": "Inventory Manager"
+                },
+                {
+                    "id": "accountant",
+                    "value": "Accountant"
+                },
+                {
+                    "id": "client",
+                    "value": "Client"
+                },
+            ];
             
             var loadPanel = $("#loadpanel").dxLoadPanel({
                 shadingColor: "rgba(255,255,255,0.2)",
                 visible: false,
                 showIndicator: true,
-                message: "Cargando...",
+                message: "Loading...",
                 showPane: true,
                 shading: false,
                 closeOnOutsideClick: false
             }).dxLoadPanel("instance");
 
+            //toolbar con opciones
             var mainToolbar = $("#toolbar").dxToolbar({
                 items: [{
                     location: 'after',
@@ -40,18 +62,19 @@
                     widget: 'dxButton',
                     options: {
                         elementAttr: {
-                            id: "btnAdicionar"
+                            id: "btnAddUser"
                         },
                         icon: "plus",
-                        text: 'Add Client',
+                        text: 'Add User',
                         onClick: function() {
-                            popupClientes(null, "Add User");
+                            userPopup(null, "Add User");
                         }
                     }
                 }]
             }).dxToolbar("instance");
 
-            var tablaClientes = $("#tablaClientes").dxDataGrid({
+            //tabla de listado de usuarios
+            var userTable = $("#userTable").dxDataGrid({
                 showBorders: true,
                 hoverStateEnabled: true,
                 rowAlternationEnabled: true,
@@ -59,204 +82,200 @@
                 allowColumnResizing: true,
                 columnResizingMode: "widget",
                 columnAutoWidth: true,
-                noDataText: "No se han encontrado datos",
+                noDataText: "No data found",
                 width: "100%",
                 loadPanel: {
                     enabled: true,
-                    text: "Procesando"
+                    text: "Processing..."
                 },
                 paging: {
-                    pageSize: 10
+                    pageSize: 15
+                },
+                pager: {
+                    allowedPageSizes: [15, 25, 50, 100],
+                    infoText: "Page {0} out of {1} | {2} Records",
+                    showInfo: true,
+                    showNavigationButtons: true,
+                    showPageSizeSelector: true,
+                    visible: true
                 },
                 columns: [{
                     dataField: "id",
                     caption: "ID",
-                    width: "5%"
+                    visible: false
                 }, {
-                    caption: "Cliente",
-                    dataField: "nombre",
-                    width: "55%"
-                },{
-                    caption: "Teléfono",
-                    dataField: "telefono",
-                    width: "10%"
-                },{
-                    caption: "Zonas",
-                    dataField: "nombreZonas",
+                    caption: "First Name",
+                    dataField: "first_name",
                     width: "20%"
                 },{
-                    caption: "Estado",
-                    dataField: "estado",
-                    width: "10%",
-                    cellTemplate(container, options) {
-                        if (options.data.estado == 1) {
-                            container.append("Activo");
-                        } else {
-                            container.append("Inactivo");
-
-                        }
-                    }
+                    caption: "Last Name",
+                    dataField: "last_name",
+                    width: "20%"
+                },{
+                    caption: "Email",
+                    dataField: "email",
+                    width: "20%"
+                },{
+                    caption: "DUI",
+                    dataField: "dui",
+                    width: "20%"
+                },{
+                    caption: "Role",
+                    dataField: "role",
+                    width: "20%"
                 }],
                 onCellClick: function(e) {
                     if (e.rowType == "data") {
-                        popupClientes(e.data, "Modificar Cliente");
+                        userPopup(e.data, "Update User");
                     }
                 },
             }).dxDataGrid("instance");
 
-            function getClientes() {
-                loadPanel.show();
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url('') }}/clientes/getClientes",
-                    dataType: "json",
-                    success: function(data) {
-                        tablaClientes.option("dataSource", data);
-                        $("#btnAdicionar").dxButton("instance").option("disabled", false);
-
-                    }
-                }).then(function() {
-                    loadPanel.hide();
-                });
-            }
-
-            function popupClientes(cliente = null, titulo) {
-                let estado = true;
-
-                if (cliente != null) {
-                    if (cliente.estado == "1") {
-                        estado = true;
-                    } else {
-                        estado = false
-                    }
-                }
-                $("#popupClientes").remove();
-                $("#popupContainer").append('<div id="popupClientes"></div>');
-                $("#popupClientes").dxPopup({
+            //formulario popup para la ceracion/edicion de usuarios
+            function userPopup(user = null, title) {
+                $("#userPopup").remove();
+                $("#popupContainer").append('<div id="userPopup"></div>');
+                $("#userPopup").dxPopup({
                     height: 'auto',
-                    width: anchoPopup,
-                    title: titulo,
+                    width: popupWidth,
+                    title: title,
                     visible: false,
                     closeOnOutsideClick: true,
                     contentTemplate: function(contentElement) {
                         contentElement.addClass("p-3");
-                        contentElement.append('<div id="datos"></div>');
-                        contentElement.append('<div id="botones" class="mt-4"></div>');
+                        contentElement.append('<div id="data"></div>');
+                        contentElement.append('<div id="buttons" class="mt-4"></div>');
 
                         texto = '<div class="col-md-12">';
-                        texto += '<div style="float: left;" id="inputEstado"></div>';
-                        texto += '<div class="ms-1" style="float: right;" id="btnCancel"></div>';
                         texto += '<div class="ms-1" style="float: right;" id="btnAdd"></div>';
                         texto += '</div>';
 
-                        $("#datos").append('<div class="col-md-12 mb-2" id="inputNombre"></div>');
-                        $("#datos").append('<div class="col-md-12 mb-2" id="inputTelefono"></div>');
-                        $("#datos").append('<div class="col-md-12" id="inputZonas"></div>');
+                        $("#data").append('<div class="col-md-12 mb-2" id="inputFirstName"></div>');
+                        $("#data").append('<div class="col-md-12 mb-2" id="inputLastName"></div>');
+                        $("#data").append('<div class="col-md-12 mb-2" id="inputEmail"></div>');
+                        $("#data").append('<div class="col-md-12 mb-2" id="inputDui"></div>');
+                        $("#data").append('<div class="col-md-12 mb-2" id="inputRole"></div>');
 
-                        $("#botones").append(texto);
+                        $("#buttons").append(texto);
 
-                        $("#inputNombre").dxTextBox({
-                            name: "inputNombre",
+                        //declaracion de componentes
+                        $("#inputFirstName").dxTextBox({
+                            name: "inputFirstName",
                             stylingMode: "filled",
-                            label: "Nombre del Cliente",
-                            labelMode: "floating",
+                            label: "First Name",
                             width: "100%",
-                            value: (cliente != null) ? cliente.nombre : "",
+                            value: (user != null) ? user.first_name : "",
                         }).dxValidator({
                             validationRules: [{
                                 type: "required",
-                                message: "El nombre del cliente es requerido."
+                                message: "First name is required."
                             }]
                         });
 
-                        $("#inputTelefono").dxTextBox({
-                            name: "inputTelefono",
+                        $("#inputLastName").dxTextBox({
+                            name: "inputLastName",
                             stylingMode: "filled",
-                            label: "Teléfono del Cliente",
-                            labelMode: "floating",
+                            label: "Last Name",
                             width: "100%",
-                            value: (cliente != null) ? cliente.telefono : "",
+                            value: (user != null) ? user.last_name : "",
                         }).dxValidator({
                             validationRules: [{
                                 type: "required",
-                                message: "El teléfono del cliente es requerido."
+                                message: "Last name is required."
                             }]
                         });
 
-                        $('#inputZonas').dxTagBox({
-                            name: "inputZonas",
+                        $("#inputEmail").dxTextBox({
+                            name: "inputEmail",
                             stylingMode: "filled",
-                            label: "Zonas del Cliente",
-                            labelMode: "floating",
+                            label: "Email",
                             width: "100%",
-                            displayExpr: 'nombre',
+                            value: (user != null) ? user.email : "",
+                        }).dxValidator({
+                            validationRules: [{
+                                type: "required",
+                                message: "Email is required."
+                            }]
+                        });
+
+                        $("#inputDui").dxTextBox({
+                            name: "inputDui",
+                            stylingMode: "filled",
+                            label: "DUI",
+                            width: "100%",
+                            value: (user != null) ? user.dui : "",
+                        }).dxValidator({
+                            validationRules: [{
+                                type: "required",
+                                message: "DUI is required."
+                            }]
+                        });
+
+                        $('#inputRole').dxSelectBox({
+                            name: "inputRole",
+                            dataSource: roles,
+                            stylingMode: "filled",
+                            label: "Role",
+                            width: "100%",
+                            displayExpr: 'value',
                             valueExpr: 'id',
+                            value: (user != null) ? user.role : "",
                         }).dxValidator({
                             validationRules: [{
                                 type: "required",
-                                message: "Las zonas del cliente son requeridas."
+                                message: "Role is required."
                             }]
-                        });
-
-                        $("#inputEstado").dxSwitch({
-                            width: 150,
-                            value: estado,
-                            switchedOffText: "INACTIVO",
-                            switchedOnText: "ACTIVO",
                         });
 
                         $("#btnAdd").dxButton({
                             disabled: false,
                             icon: "check",
-                            type: "success",
+                            type: "normal",
                             onClick: function(e) {
                                 var resultado = e.validationGroup.validate();
                                 if (resultado.isValid) {
                                     //$("#btnAdd").dxButton("instance").option("disabled",true);
-                                    var datos = {
-                                        nombre: $("#inputNombre").dxTextBox('instance').option("value"),
-                                        telefono: $("#inputTelefono").dxTextBox('instance').option("value"),
-                                        zonas: $("#inputZonas").dxTagBox('instance').option("value").join(","),
-                                        estado: $("#inputEstado").dxSwitch('instance').option("value"),
 
+                                    //obtiene los datos ingresados de los inputs del formulario
+                                    var data = {
+                                        first_name: $("#inputFirstName").dxTextBox('instance').option("value"),
+                                        last_name: $("#inputLastName").dxTextBox('instance').option("value"),
+                                        email: $("#inputEmail").dxTextBox('instance').option("value"),
+                                        dui: $("#inputDui").dxTextBox('instance').option("value"),
+                                        role: $("#inputRole").dxSelectBox('instance').option("value"),
                                     };
-                                    if (cliente == null) {
-                                        adicionarCliente(datos);
+
+                                    //determina si agregar un nuevo usuario o modificar uno existente
+                                    if (user == null) {
+                                        addUser(data);
                                     } else {
-                                        const idCliente = cliente.id;
-                                        updateCliente(datos, idCliente);
+                                        const userId = user.id;
+                                        updateUser(data, userId);
                                     }
                                 }
                             }
                         });
-
-                        $("#btnCancel").dxButton({
-                            icon: "close",
-                            type: "danger",
-                            onClick: function(e) {
-                                $("#popupClientes").dxPopup("instance").hide();
-                            }
-                        });
-
-
                     }
                 });
 
+                $("#userPopup").dxPopup("instance").show();
+
+            }
+
+            //funcion que obtiene el listado de usuarios del sistema
+            function getUsers() {
                 loadPanel.show();
                 $.ajax({
                     type: "POST",
-                    url: "{{ url('') }}/zonas/getZonas",
+                    url: "{{ url('') }}/users/getUsers",
+                    data: {"id": {{Auth::user()->id}}},
                     dataType: "json",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     success: function(data) {
-                        $("#popupClientes").dxPopup("instance").show();
-                        $('#inputZonas').dxTagBox("instance").option("dataSource", data);
-                        if(cliente != null){
-                            let array = cliente.zonas.split(",").map(function(item) {
-                                return parseInt(item, 10);
-                            });
-                            $('#inputZonas').dxTagBox("instance").option("value", array );
-                        } 
-
+                        userTable.option("dataSource", data);
+                        $("#btnAddUser").dxButton("instance").option("disabled", false);
 
                     }
                 }).then(function() {
@@ -264,23 +283,28 @@
                 });
             }
 
-            function adicionarCliente(datos) {
+            function addUser(data) {
                 loadPanel.show();
                 $.ajax({
                     type: "POST",
-                    url: "{{ url('') }}/clientes/addCliente",
+                    url: "{{ url('') }}/users/addUser",
                     data: {
-                        "datos": datos
+                        "data": data
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     dataType: "json",
                     success: function(data) {
-                        if (data.respuesta == 'OK') {
-                            DevExpress.ui.notify(data.mensaje, "success", 2000);
-                            $("#popupClientes").dxPopup("instance").hide();
-                            getClientes();
+                        if (data.isValid) {
+                            
+                            DevExpress.ui.notify(data.message, "success", 2000);
+                            $("#userPopup").dxPopup("instance").hide();
+                            getUsers();
+
                         } else {
                             $("#btnAdd").dxButton("instance").option("disabled", false);
-                            DevExpress.ui.notify(data.mensaje, "error", 2000);
+                            DevExpress.ui.notify(data.message, "error", 2000);
                         }
 
                     }
@@ -289,24 +313,27 @@
                 });
             }
 
-            function updateCliente(datos, idCliente) {
+            function updateUser(data, userId) {
                 loadPanel.show();
                 $.ajax({
                     type: "POST",
-                    url: "{{ url('') }}/clientes/updateCliente",
+                    url: "{{ url('') }}/users/updateUser",
                     data: {
-                        "datos": datos,
-                        "id": idCliente
+                        "data": data,
+                        "userId": userId
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     dataType: "json",
                     success: function(data) {
-                        if (data.respuesta == 'OK') {
-                            DevExpress.ui.notify(data.mensaje, "success", 2000);
-                            $("#popupClientes").dxPopup("instance").hide();
-                            getClientes();
+                        if (data.isValid) {
+                            DevExpress.ui.notify(data.message, "success", 2000);
+                            $("#userPopup").dxPopup("instance").hide();
+                            getUsers();
                         } else {
                             $("#btnAdd").dxButton("instance").option("disabled", false);
-                            DevExpress.ui.notify(data.mensaje, "error", 2000);
+                            DevExpress.ui.notify(data.message, "error", 2000);
                         }
 
                     }
@@ -315,7 +342,8 @@
                 });
             }
 
-            getClientes();
+            //carga inicial de datos
+            getUsers();
         });
     </script>
 @endsection

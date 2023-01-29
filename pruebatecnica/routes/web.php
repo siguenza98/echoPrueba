@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,16 +22,20 @@ Route::get('/', function () {
 */
 Route::get('/', function () {
     return view('dashboard');
+
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/users', 'user_index')->middleware('can:users');
     Route::view('/stock', 'stock_index')->middleware('can:stock');
     Route::view('/accounting', 'accounting_index')->middleware('can:accounting');
     Route::view('/online_store', 'store_index')->middleware('can:online_store');
 
     Route::controller(UserController::class)->group(function () {
-        Route::post('users/getUsers', 'getUsers');    
+        Route::post('users/getUsers', 'getUsers')->middleware('can:users');    
+        Route::post('users/addUser', 'addUser')->middleware('can:users');    
+        Route::post('users/updateUser', 'updateUser')->middleware('can:users');    
+
     });
 });
 
