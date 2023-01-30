@@ -12,6 +12,7 @@ Lenguajes ocupados: PHP(Laravel) y JS
 ##  Cómo correr
 - Crear BD MySql llamada 'echodb'
 - Ejecutar comando 'composer install' dentro de la carpeta raiz del proyecto
+- Copiar archivo .env de la carpeta 'Backup' a la carpeta del proyecto
 - Ejecutar comando 'php artisan migrate:fresh --seed' para crear las tablas y rellenarlas con datos
 - Montar servidor usando 'php artisan serve'
 - Al iniciar sesion, la contraseña para todos los usuarios es 'password'
