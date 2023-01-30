@@ -16,3 +16,8 @@ Lenguajes ocupados: PHP(Laravel) y JS
 - Ejecutar comando 'php artisan migrate:fresh --seed' para crear las tablas y rellenarlas con datos
 - Montar servidor usando 'php artisan serve'
 - Al iniciar sesion, la contraseña para todos los usuarios es 'password'
+
+##  Enlace de video
+https://www.youtube.com/watch?v=QLSNYZHOb0Q
+
+##  Desarrollado por Fernando Sigüenza
