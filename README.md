@@ -7,7 +7,7 @@ Lenguajes ocupados: PHP(Laravel) y JS
 - Laravel Auth -> Autenticación
 - Spatie -> Manejo de roles
 - Bootstrap, Nice Admin -> plantilla para las vistas
-- DevExpressJS -> componentes JS para el mantenimiento de los usuarios
+- DevExpressJS -> componentes JS para el mantenimiento de los usuarios, gratis para usos no comerciales
 
 ##  Cómo correr
 - Crear BD MySql llamada 'echodb'
