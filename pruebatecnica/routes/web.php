@@ -25,6 +25,7 @@ Route::get('/', function () {
 
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+//a cada ruta se le asigna un rol el cual podra acceder a ellas
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/users', 'user_index')->middleware('can:users');
     Route::view('/stock', 'stock_index')->middleware('can:stock');
